@@ -2,27 +2,32 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-multipliers = []
+data = []
 
 @app.route('/')
 def home():
-    return "server ok"
+    return "API OK"
 
-@app.route('/add', methods=['POST'])
-def add():
-    data = request.get_json()
-    if not data or "value" not in data:
-        return jsonify({"error": "bad request"}), 400
-
-    value = float(data["value"])
-    multipliers.append(value)
-
+@app.route('/send', methods=['POST'])
+def send():
+    value = float(request.json.get("value"))
+    data.append(value)
     return jsonify({"status": "added"})
 
-@app.route('/predict')
+@app.route('/predict', methods=['GET'])
 def predict():
-    if len(multipliers) == 0:
-        return jsonify({"prediction": 1.0})
+    if len(data) == 0:
+        return jsonify({"prediction": 2.0})
 
-    avg = sum(multipliers) / len(multipliers)
-    return jsonify({"prediction": round(avg, 2)})
+    avg = sum(data) / len(data)
+    last = data[-5:]
+    low = len([x for x in last if x < 2])
+
+    if low >= 3:
+        pred = 4.0
+    elif avg > 3:
+        pred = 2.0
+    else:
+        pred = 3.0
+
+    return jsonify({"prediction": pred})
